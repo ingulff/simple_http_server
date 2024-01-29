@@ -1,6 +1,7 @@
 build/
 out/
 .vs/
+.vscode/
 .idea/
 
 cmake/3rdparty_config.cmake
