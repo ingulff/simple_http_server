@@ -70,7 +70,6 @@ public:
 		, m_status(status::created)
 		, m_last_activity(std::chrono::steady_clock::now())
 	{}
-
 	http_session_impl(http_session_impl & other) = delete;
 
 	http_session_impl & operator=(http_session_impl & other) = delete;
@@ -83,23 +82,21 @@ public:
 
 public:
 
-	constexpr status get_status() const noexcept 
-	{ 
-		return m_status; 
+	constexpr status get_status() const noexcept
+	{
+		return m_status;
 	}
-
 
 	status set_status(status new_status)
-	{ 
+	{
 		status old = m_status; 
 		m_status = new_status; 
-		return old; 
+		return old;
 	}
 
-
-	std::chrono::steady_clock::time_point  last_activity() const 
-	{ 
-		return m_last_activity; 
+	std::chrono::steady_clock::time_point  last_activity() const
+	{
+		return m_last_activity;
 	}
 
 public:
@@ -174,7 +171,7 @@ private:
 		auto self_shared = this->shared_from_this();
         std::visit([&results, this, self_shared](auto& stream){
 			using namespace std::chrono_literals;
-            boost::beast::get_lowest_layer(stream).expires_after(1ms);
+            boost::beast::get_lowest_layer(stream).expires_after(30000ms);
 
             boost::beast::get_lowest_layer(stream).async_connect(results, std::bind(&http_session_impl::on_connect, self_shared, std::placeholders::_1, std::placeholders::_2));
 
@@ -253,7 +250,7 @@ private:
         auto self_shared = this->shared_from_this();
         std::visit([this, self_shared](auto& stream){
 			using namespace std::chrono_literals;
-            boost::beast::get_lowest_layer(stream).expires_after(1ms);
+            boost::beast::get_lowest_layer(stream).expires_after(30000ms);
             boost::beast::http::async_read(stream, m_buffer, m_response, std::bind(&http_session_impl::on_read, self_shared, std::placeholders::_1, std::placeholders::_2));
         }, m_stream);
 	}
@@ -328,6 +325,26 @@ http_session::http_session(boost::asio::io_context & io_context, ssl::disabled_s
 {}
 
 http_session::~http_session() = default;
+
+
+http_session::status http_session::get_status() const noexcept
+{
+	return m_impl->get_status(); 
+}
+
+
+http_session::status http_session::set_status(http_session::status new_status)
+{ 
+	status old = m_impl->get_status(); 
+	m_impl->set_status(new_status); 
+	return old; 
+}
+
+
+std::chrono::steady_clock::time_point  http_session::last_activity() const 
+{ 
+	return m_impl->last_activity(); 
+}
 
 
 void http_session::send(connect_t settings, response_callback_t callbask)

@@ -72,6 +72,16 @@ public:
 
 public:
 
+	status get_status() const noexcept;
+
+
+	status set_status(status new_status);
+
+
+	std::chrono::steady_clock::time_point  last_activity() const;
+
+public:
+
 	void send(connect_t settings, response_callback_t callbask);
 
 private:
@@ -80,7 +90,6 @@ private:
 };
 
 } // namespace tt_program
-
 
 #endif // TT_HTTP_SESSION_HPP
 
