@@ -38,6 +38,11 @@ private:
     T & m_io_context;
 };
 
+template<typename T>
+run_io_context_t<T> run_io_context(T & io_context)
+{
+    return run_io_context_t<T>(io_context);
+}
 
 }
 
