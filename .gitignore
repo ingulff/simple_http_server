@@ -4,4 +4,10 @@ out/
 .vscode/
 .idea/
 
+*.html
+*.png
+*.jpg
+
+/resource
+
 cmake/3rdparty_config.cmake
