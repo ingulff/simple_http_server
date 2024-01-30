@@ -40,6 +40,9 @@ endif()
 
 set(${EXECUTABLE_TARGET_NAME}_source
 	${CMAKE_CURRENT_SOURCE_DIR}/main.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/http_session.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/error.cpp
+
 )
 
 # other source
@@ -82,9 +85,15 @@ target_compile_options(${EXECUTABLE_TARGET_NAME}
 target_include_directories(${EXECUTABLE_TARGET_NAME}
 	PRIVATE
 		${CMAKE_CURRENT_SOURCE_DIR}
+		${BOOST_INCLUDE}
+		${OPENSSL_INCLUDE_DIR}
 )
 
-# target_link_libraries()
+target_link_libraries(${EXECUTABLE_TARGET_NAME}
+	PRIVATE
+		OpenSSL::SSL
+		OpenSSL::Crypto
+)
 
 
 set_target_properties(${EXECUTABLE_TARGET_NAME}

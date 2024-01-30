@@ -33,7 +33,10 @@ set(DEFAULT_SOURCE_DIR "${CMAKE_SPURCE_DIR}/resource")
 #------------------------------------------------------------------------------------------------------------------------------------------
 
 set(${EXECUTABLE_TARGET_NAME}_source
+	${CMAKE_SOURCE_DIR}/source/http_session.cpp
+	${CMAKE_SOURCE_DIR}/source/error.cpp
 	${CMAKE_SOURCE_DIR}/tests/main.cpp
+	${CMAKE_SOURCE_DIR}/tests/http_client.cpp
 )
 
 # other source
@@ -47,7 +50,11 @@ target_sources(${EXECUTABLE_TARGET_NAME}
 		${${EXECUTABLE_TARGET_NAME}_source}
 )
 
-# target_compile_definitions()
+target_compile_definitions(${EXECUTABLE_TARGET_NAME}
+	PUBLIC
+        _WIN32_WINNT=0x0501
+        OPENSSL_NO_SSL2
+)
 
 set(COMPILE_OPTIONS)
 if(MSVC)
@@ -75,9 +82,15 @@ target_include_directories(${EXECUTABLE_TARGET_NAME}
 		${CMAKE_SOURCE_DIR}/source
 		${CMAKE_SOURCE_DIR}/tests
 		${CMAKE_SOURCE_DIR}/tests/3rdparty
+		${BOOST_INCLUDE}
+		${OPENSSL_INCLUDE_DIR}
 )
 
-# target_link_libraries()
+target_link_libraries(${EXECUTABLE_TARGET_NAME}
+	PRIVATE
+		OpenSSL::SSL
+		OpenSSL::Crypto
+)
 
 
 set_target_properties(${EXXCUTABLE_TARGET_NAME}
