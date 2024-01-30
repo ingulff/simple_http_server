@@ -20,7 +20,7 @@
 // boost
 //#include <libs/beast/example/common/root_certificates.hpp>
 
-#include "error.hpp"
+#include "error/error.hpp"
 #include "http_session.hpp"
 #include "utils/algorithm.hpp"
 
@@ -310,27 +310,6 @@ private:
 			callback(result, error);			
         }
 	}
-#if 1
-	void disconnect(const boost::system::error_code& error)
-	{
-		auto self_shared = this->shared_from_this();
-		std::visit(utils::overloaded{
-			[this, self_shared, &error](auto& stream)
-			{
-            	stream.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both, error);
-			},
-			[this, self_shared, error](boost::beast::ssl_stream<boost::beast::tcp_stream>& stream)
-			{
-				stream.shutdown(error);
-			}
-		}, m_stream);
-
-		if(error && error != boost::beast::errc::not_connected)
-		{
-			on_error(error);
-		}	
-	}
-#endif
 
 private:
 	using ssl_context_optional = std::optional<boost::asio::ssl::context>;
