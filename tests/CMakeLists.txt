@@ -18,7 +18,21 @@ endif()
 set(EXECUTABLE_TARGET_NAME ${PROJECT_NAME})
 add_executable(${EXECUTABLE_TARGET_NAME})
 
-set(DEFAULT_SOURCE_DIR "${CMAKE_SPURCE_DIR}/resource")
+set(DEFAULT_INTERNAL_SOURCE_DIR "${CMAKE_SOURCE_DIR}/resource")
+set(DEFAULT_INTERNAL_UPLOAD_SOURCE_DIR "${DEFAULT_INTERNAL_SOURCE_DIR}/upload")
+set(DEFAULT_INTERNAL_DOWNLOAD_SOURCE_DIR "${DEFAULT_INTERNAL_SOURCE_DIR}/download")
+
+set(DOWNLOAD_SOURCE_DIR "${DEFAULT_INTERNAL_DOWNLOAD_SOURCE_DIR}")
+set(UPLOAD_SOURCE_DIR "${DEFAULT_INTERNAL_UPLOAD_SOURCE_DIR}")
+
+if(DEFINED EXTERNAL_UPLOAD_SOURCE_DIR)
+	set(UPLOAD_SOURCE_DIR "${EXTERNAL_SOURCE_DIR}")
+endif()
+
+if(DEFINED EXTERNAL_DOWNLOAD_SOURCE_DIR)
+	set(DOWNLOAD_SOURCE_DIR "${EXTERNAL_DOWNLOAD_SOURCE_DIR}")
+endif()
+
 
 # other option
 
@@ -33,10 +47,13 @@ set(DEFAULT_SOURCE_DIR "${CMAKE_SPURCE_DIR}/resource")
 #------------------------------------------------------------------------------------------------------------------------------------------
 
 set(${EXECUTABLE_TARGET_NAME}_source
-	${CMAKE_SOURCE_DIR}/source/http_session.cpp
-	${CMAKE_SOURCE_DIR}/source/error.cpp
+	${CMAKE_SOURCE_DIR}/source/error/error.cpp
 	${CMAKE_SOURCE_DIR}/tests/main.cpp
 	${CMAKE_SOURCE_DIR}/tests/http_client.cpp
+	${CMAKE_SOURCE_DIR}/tests/http_session.cpp
+	${CMAKE_SOURCE_DIR}/tests/stream_crc32.cpp
+	${CMAKE_SOURCE_DIR}/tests/3rdparty/Crc32/Crc32.cpp
+	${CMAKE_SOURCE_DIR}/tests/utils/filepaths.cpp
 )
 
 # other source
@@ -50,10 +67,11 @@ target_sources(${EXECUTABLE_TARGET_NAME}
 		${${EXECUTABLE_TARGET_NAME}_source}
 )
 
+
 target_compile_definitions(${EXECUTABLE_TARGET_NAME}
-	PUBLIC
-        _WIN32_WINNT=0x0501
-        OPENSSL_NO_SSL2
+	PRIVATE
+		UPLOAD_SOURCE_DIR="${UPLOAD_SOURCE_DIR}"
+		DOWNLOAD_SOURCE_DIR="${DOWNLOAD_SOURCE_DIR}"
 )
 
 set(COMPILE_OPTIONS)
