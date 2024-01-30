@@ -15,9 +15,10 @@
 #include <boost/beast/core/tcp_stream.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/ssl/ssl_stream.hpp>
+#include <boost/beast/version.hpp>
 
 // boost
-#include <libs/beast/example/common/root_certificates.hpp>
+//#include <libs/beast/example/common/root_certificates.hpp>
 
 #include "error.hpp"
 #include "http_session.hpp"
@@ -53,8 +54,8 @@ public:
 		, m_last_activity(std::chrono::steady_clock::now())
 	{
 		boost::beast::error_code error;
-		// This holds the root certificate used for verification
-    	::load_root_certificates(*m_ssl_context, error);
+        // This holds the root certificate used for verification
+	    //::load_root_certificates(*m_ssl_context, error);
 	}
 
 	explicit http_session_impl(boost::asio::io_context & io_context, ssl::disabled_ssl)
@@ -108,8 +109,7 @@ public:
 		
 		if ( (m_status != status::connected && m_status != status::wait_next_request) || old_settings.host != m_settings.host || old_settings.port != m_settings.port)
 		{
-			
-			return connect(m_settings.host, m_settings.port);
+			return connect(m_settings.host, std::to_string(m_settings.port));
 		}
 
 		write();
@@ -117,16 +117,14 @@ public:
 
 private:
 
-	void connect(std::string host, std::int16_t port)
+	void connect(std::string host, std::string port)
 	{
-		m_settings.host = std::move(host);
-		m_settings.port = port;
-
 		set_status(status::resolving);
 
+		//m_ssl_context.add_certificate_authority(boost::asio::const_buffer(connect_params.certificate_buffer.data(), connect_params.certificate_buffer.size()));
 		m_resolver.async_resolve(
-			m_settings.host,
-			std::to_string(m_settings.port),
+			host,
+			port,
 			std::bind(
 				&http_session_impl::on_resolve,
 				this->shared_from_this(), 
@@ -140,6 +138,7 @@ private:
 	{
 		if( error )
 		{
+			on_error(error);
 			return;
 		}
 
@@ -148,30 +147,28 @@ private:
 		if (m_ssl_context)
         {
             //set verify mode.
+			auto self_shared = this->shared_from_this();
             std::visit(utils::overloaded{ 
                 [](boost::beast::tcp_stream&){ assert(false); },
-                [this](boost::beast::ssl_stream<boost::beast::tcp_stream>& stream)
+                [this, self_shared](boost::beast::ssl_stream<boost::beast::tcp_stream>& stream)
                 {
-//#if 0 //Disable verify, until solve an issue with certificates.
-                    stream.set_verify_mode(boost::asio::ssl::verify_peer | boost::asio::ssl::verify_fail_if_no_peer_cert);
-
                     ::ERR_clear_error();
 
                     if ( !SSL_set_tlsext_host_name(stream.native_handle(), m_settings.host.c_str()) )
                     {
                         return on_error(boost::asio::error::make_error_code(static_cast<boost::asio::error::ssl_errors>( ::ERR_get_error() )));
                     }
-#if 0//#else 
-                    stream.set_verify_mode(boost::asio::ssl::verify_none);
-#endif
+
+					stream.set_verify_mode(boost::asio::ssl::verify_none);
+                    //stream.set_verify_mode(boost::asio::ssl::verify_peer);// | boost::asio::ssl::verify_fail_if_no_peer_cert);
+					stream.set_verify_callback(std::bind(&http_session_impl::verify_certyficate, self_shared, std::placeholders::_1, std::placeholders::_2));
                 }
             }, m_stream);    
         }
 
 		auto self_shared = this->shared_from_this();
         std::visit([&results, this, self_shared](auto& stream){
-			using namespace std::chrono_literals;
-            boost::beast::get_lowest_layer(stream).expires_after(30000ms);
+            boost::beast::get_lowest_layer(stream).expires_after(default_inactive_timeout);
 
             boost::beast::get_lowest_layer(stream).async_connect(results, std::bind(&http_session_impl::on_connect, self_shared, std::placeholders::_1, std::placeholders::_2));
 
@@ -179,10 +176,28 @@ private:
 
 	}
 
+	bool verify_certyficate(bool preverified, boost::asio::ssl::verify_context & ssl_context)
+    {
+        // The verify callback can be used to check whether the certificate that is
+        // being presented is valid for the peer. For example, RFC 2818 describes
+        // the steps involved in doing this for HTTPS. Consult the OpenSSL
+        // documentation for more details. Note that the callback is called once
+        // for each certificate in the certificate chain, starting from the root
+        // certificate authority.
+
+        // In this example we will simply print the certificate's subject name.
+        char subject_name[256];
+        X509* cert = X509_STORE_CTX_get_current_cert(ssl_context.native_handle());
+        X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
+
+        return preverified;
+    }
+
 	void on_connect(boost::beast::error_code error, boost::asio::ip::tcp::resolver::results_type::endpoint_type)
 	{
 		if( error )
 		{
+			on_error(error);
 			return;
 		}
 		
@@ -193,7 +208,7 @@ private:
 			auto self_shared = this->shared_from_this();
 			std::visit(utils::overloaded{
 				[](boost::beast::tcp_stream&){ assert(false); },
-				[this, self_shared](boost::beast::ssl_stream<boost::beast::tcp_stream>& stream)
+				[this, self_shared, error](boost::beast::ssl_stream<boost::beast::tcp_stream>& stream)
 				{
 					stream.async_handshake(boost::asio::ssl::stream_base::client, std::bind(&http_session_impl::on_handshake, self_shared, std::placeholders::_1));
 				}
@@ -210,6 +225,7 @@ private:
 	{
 		if( error )
 		{
+			on_error(error);
 			return;
 		}
 
@@ -227,10 +243,10 @@ private:
 		m_request.version(m_settings.version);
 		m_request.method(m_settings.method == http_method::GET ? boost::beast::http::verb::get : boost::beast::http::verb::post);
         m_request.target(m_settings.target);
-
 		m_request.set(boost::beast::http::field::host, m_settings.host);
-        m_request.set(boost::beast::http::field::content_type, "application/tt");
-        m_request.set(boost::beast::http::field::content_length, std::to_string(m_settings.target.size()));
+		m_request.set(boost::beast::http::field::content_type, "text/html");
+		m_request.set(boost::beast::http::field::connection, "keep-alive");
+		m_request.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
 		auto self_shared = this->shared_from_this(); //MSVC bug: can't determine this->shared_from_this() inside lambda.
         std::visit([this, self_shared](auto& stream){
@@ -238,10 +254,13 @@ private:
         }, m_stream);
 	}
 
-	void on_write(boost::beast::error_code error, std::size_t bytes_trasferred)
+	void on_write(boost::beast::error_code error, std::size_t bytes_transferred)
 	{
+		boost::ignore_unused(bytes_transferred);
+
 		if( error )
 		{
+			on_error(error);
 			return;
 		}
 
@@ -249,14 +268,15 @@ private:
 
         auto self_shared = this->shared_from_this();
         std::visit([this, self_shared](auto& stream){
-			using namespace std::chrono_literals;
-            boost::beast::get_lowest_layer(stream).expires_after(30000ms);
+            boost::beast::get_lowest_layer(stream).expires_after(default_inactive_timeout);
             boost::beast::http::async_read(stream, m_buffer, m_response, std::bind(&http_session_impl::on_read, self_shared, std::placeholders::_1, std::placeholders::_2));
         }, m_stream);
 	}
 
-	void on_read(boost::beast::error_code error, std::size_t bytes_trasferred)
+	void on_read(boost::beast::error_code error, std::size_t bytes_transferred)
 	{
+		boost::ignore_unused(bytes_transferred);
+
 		if( error )
 		{
 			return;
@@ -287,9 +307,30 @@ private:
             //boost::asio::post(m_io_context, std::bind(callback, response, m_current_packet, ec));
             auto result = m_response.body().data();
 
-			callback(result, error);
+			callback(result, error);			
         }
 	}
+#if 1
+	void disconnect(const boost::system::error_code& error)
+	{
+		auto self_shared = this->shared_from_this();
+		std::visit(utils::overloaded{
+			[this, self_shared, &error](auto& stream)
+			{
+            	stream.socket().shutdown(boost::asio::ip::tcp::socket::shutdown_both, error);
+			},
+			[this, self_shared, error](boost::beast::ssl_stream<boost::beast::tcp_stream>& stream)
+			{
+				stream.shutdown(error);
+			}
+		}, m_stream);
+
+		if(error && error != boost::beast::errc::not_connected)
+		{
+			on_error(error);
+		}	
+	}
+#endif
 
 private:
 	using ssl_context_optional = std::optional<boost::asio::ssl::context>;

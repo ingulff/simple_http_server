@@ -12,7 +12,8 @@
 
 namespace tt_program
 {
-
+using namespace std::chrono_literals;
+constexpr std::chrono::milliseconds default_inactive_timeout = 1000ms;
 class http_session : public std::enable_shared_from_this<http_session>
 {
 public:
