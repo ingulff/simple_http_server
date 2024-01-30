@@ -6,8 +6,13 @@
 #include <filesystem>
 #include <string>
 #include <vector>
+#include <unordered_set>
+
+#include <cstdint>
 
 #include "filepaths.hpp"
+#include "stream_crc32.hpp"
+#include "utils/filesystem_helpers.hpp"
 
 namespace tt_tests
 {
@@ -34,44 +39,6 @@ static void append_files(std::vector<std::string> & paths, const std::string_vie
 }
 
 
-void throw_if_no_exist(const std::filesystem::path & entry)
-{
-    if(std::filesystem::exists(entry) == false)
-    {
-        std::string msg{"ERROR: file or directory "};
-        msg += entry.string();
-        msg += " not exist\n";
-        throw std::logic_error(msg);
-    }
-}
-
-void throw_if_no_exist(const std::string & path)
-{
-    std::filesystem::path entry{path};
-
-    throw_if_no_exist(entry);
-}
-
-
-void throw_if_no_directory(const std::filesystem::path & dir_path)
-{
-    if(std::filesystem::is_directory(upload_resource_dir) == false)
-    {
-        std::string msg{"ERROR: source_dir path: "};
-        msg += upload_resource_dir;
-        msg += " not directory\n";
-        throw std::logic_error(msg);
-    }
-}
-
-void throw_if_no_directory(const std::string & dir_path)
-{
-    std::filesystem::path entry{dir_path};
-
-    throw_if_no_directory(entry);
-}
-
-
 static std::vector<std::string> filenames;
 
 void generate_upload_filepaths(const std::string_view & dir_path)
@@ -82,8 +49,8 @@ void generate_upload_filepaths(const std::string_view & dir_path)
     
     std::filesystem::path entry{dir_path};
 
-    throw_if_no_exist(entry);
-    throw_if_no_directory(entry);
+    tt_program::utils::throw_if_no_exist(entry);
+    tt_program::utils::throw_if_no_directory(entry);
 
     append_files(upload_filepaths, entry);
 }
@@ -99,10 +66,46 @@ void generate_download_filepaths(const std::string_view & dir_path)
 
     std::filesystem::path entry{dir_path};
 
-    throw_if_no_exist(entry);
-    throw_if_no_directory(entry);
+    tt_program::utils::throw_if_no_exist(entry);
+    tt_program::utils::throw_if_no_directory(entry);
 
     append_files(download_filepaths, entry);
+}
+
+
+static void insert_fil_hash(std::unordered_set<std::uint32_t> hash_set, std::int32_t hash)
+{
+    hash_set.insert(hash);
+}
+
+
+static void generate_file_hash(const std::filesystem::path entry)
+{
+    tt_program::utils::throw_if_no_exist(entry);
+    tt_program::utils::throw_if_no_regular_file(entry);
+
+    auto hasher = make_stream_crc32();
+    auto hash = hasher->calc_crc32(entry.string());
+    insert_fil_hash(upload_files_hashs, hash);
+}
+
+static void generate_file_hash(const std::string & file_path)
+{
+    std::filesystem::path file{file_path};
+    generate_file_hash(file);
+}
+
+void generate_upload_file_hashs()
+{
+    if(upload_filepaths.empty() == true)
+    {
+        generate_upload_filepaths(upload_resource_dir);
+    }
+
+    for(const auto & path : upload_filepaths )
+    {
+        generate_file_hash(path);
+    }
 }
 
 } // namespace tt_tests

@@ -3,6 +3,9 @@
 
 #include <string>
 #include <vector>
+#include <unordered_set>
+
+#include <cstdint>
 
 namespace tt_tests
 {
@@ -32,15 +35,13 @@ inline std::vector<std::string> upload_filepaths;
 
 inline std::vector<std::string> download_filepaths;
 
+inline std::unordered_set<std::uint32_t> upload_files_hashs;
+
 
 void generate_upload_filepaths(const std::string_view & dir_path);
 void generate_download_filepaths(const std::string_view & dir_path);
 
-void throw_if_no_exist(const std::string & path);
-void throw_if_no_exist(const std::filesystem::path & entry);
-
-void throw_if_no_directory(const std::string & dir_path);
-void throw_if_no_directory(const std::filesystem::path & dir_path);
+void generate_upload_file_hashs();
 
 } // namespace tt_tests
 
