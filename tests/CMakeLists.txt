@@ -25,8 +25,8 @@ set(DEFAULT_INTERNAL_DOWNLOAD_SOURCE_DIR "${DEFAULT_INTERNAL_SOURCE_DIR}/downloa
 set(DOWNLOAD_SOURCE_DIR "${DEFAULT_INTERNAL_DOWNLOAD_SOURCE_DIR}")
 set(UPLOAD_SOURCE_DIR "${DEFAULT_INTERNAL_UPLOAD_SOURCE_DIR}")
 
-if(DEFINED EXTERNAL_UPLOAD_SOURCE_DIR)
-	set(UPLOAD_SOURCE_DIR "${EXTERNAL_SOURCE_DIR}")
+if(DEFINED TT_EXTERNAL_UPLOAD_SOURCE_DIR)
+	set(TT_UPLOAD_SOURCE_DIR "${EXTERNAL_SOURCE_DIR}")
 endif()
 
 if(DEFINED EXTERNAL_DOWNLOAD_SOURCE_DIR)
@@ -48,12 +48,13 @@ endif()
 
 set(${EXECUTABLE_TARGET_NAME}_source
 	${CMAKE_SOURCE_DIR}/source/error/error.cpp
+	${CMAKE_SOURCE_DIR}/source/utils/filesystem_helpers.cpp
 	${CMAKE_SOURCE_DIR}/tests/main.cpp
 	${CMAKE_SOURCE_DIR}/tests/http_client.cpp
 	${CMAKE_SOURCE_DIR}/tests/http_session.cpp
-	${CMAKE_SOURCE_DIR}/tests/stream_crc32.cpp
 	${CMAKE_SOURCE_DIR}/tests/3rdparty/Crc32/Crc32.cpp
 	${CMAKE_SOURCE_DIR}/tests/utils/filepaths.cpp
+	${CMAKE_SOURCE_DIR}/tests/utils/stream_crc32.cpp
 )
 
 # other source
