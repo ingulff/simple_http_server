@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <filesystem>
 #include <string>
+#include <system_error>
 #include <vector>
 #include <unordered_set>
 
@@ -39,6 +40,18 @@ static void append_files(std::vector<std::string> & paths, const std::string_vie
 }
 
 
+static void create_directory(const std::filesystem::path path)
+{
+    std::filesystem::create_directory(path);
+}
+
+static void create_directory(std::string_view path)
+{
+    std::filesystem::path entry{path};
+    tt_tests::create_directory(entry);
+}
+
+
 static std::vector<std::string> filenames;
 
 void generate_upload_filepaths(const std::string_view & dir_path)
@@ -65,6 +78,8 @@ void generate_download_filepaths(const std::string_view & dir_path)
     }
 
     std::filesystem::path entry{dir_path};
+    
+    tt_tests::create_directory(entry);
 
     tt_program::utils::throw_if_no_exist(entry);
     tt_program::utils::throw_if_no_directory(entry);
@@ -106,6 +121,15 @@ void generate_upload_file_hashs()
     {
         generate_file_hash(path);
     }
+}
+
+
+std::error_code clear_downloading_directory()
+{
+    std::filesystem::path dir{download_resourse_dir};
+    std::error_code error;
+    std::filesystem::remove_all(dir, error);
+    return error;
 }
 
 } // namespace tt_tests

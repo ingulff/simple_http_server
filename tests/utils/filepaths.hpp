@@ -2,6 +2,7 @@
 #define TT_FILEPATHS_HPP
 
 #include <string>
+#include <system_error>
 #include <vector>
 #include <unordered_set>
 
@@ -42,6 +43,8 @@ void generate_upload_filepaths(const std::string_view & dir_path);
 void generate_download_filepaths(const std::string_view & dir_path);
 
 void generate_upload_file_hashs();
+
+std::error_code clear_downloading_directory();
 
 } // namespace tt_tests
 
