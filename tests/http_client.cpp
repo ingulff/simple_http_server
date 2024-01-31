@@ -24,7 +24,7 @@ http_client::http_client(boost::asio::io_context & io_context, response_callback
 	: m_io_context(io_context)
 	, m_settings()
 	, m_response_callback(std::move(response_callback))
-	, m_steady_timer( m_io_context, tt_program::default_inactive_timeout )
+	, m_steady_timer( m_io_context, tt_tests::default_inactive_timeout )
 { 
 	using namespace std::chrono_literals;
 	m_steady_timer.async_wait(std::bind(&http_client::on_steady_timer, this, std::placeholders::_1));
@@ -52,7 +52,7 @@ void http_client::send_http(connect_t settings)
 void http_client::send_https(connect_t settings)
 {
 	auto session = find_http_session(ssl::enabled_ssl{});
-
+	
     if (!session)
     {
         session = create_http_session(ssl::enabled_ssl{});
@@ -71,9 +71,9 @@ void http_client::on_receive(std::string response, std::uint32_t error_code)
 	boost::asio::post(m_io_context, std::bind(m_response_callback, response, error_code));
 }
 
-std::shared_ptr<tt_program::http_session> http_client::find_http_session(ssl::disabled_ssl) const
+std::shared_ptr<tt_tests::http_session> http_client::find_http_session(ssl::disabled_ssl) const
 {
-	std::shared_ptr<tt_program::http_session> result;
+	std::shared_ptr<tt_tests::http_session> result;
 	std::chrono::steady_clock::time_point max_point = std::chrono::steady_clock::time_point ::min();
 
 	for(auto && [session_id, session] : m_sessions)
@@ -112,9 +112,9 @@ std::shared_ptr<tt_program::http_session> http_client::find_http_session(ssl::di
     return result;
 }
 
-std::shared_ptr<tt_program::http_session> http_client::find_http_session(ssl::enabled_ssl) const
+std::shared_ptr<tt_tests::http_session> http_client::find_http_session(ssl::enabled_ssl) const
 {
-    std::shared_ptr<tt_program::http_session> result;
+    std::shared_ptr<tt_tests::http_session> result;
 	std::chrono::steady_clock::time_point max_point = std::chrono::steady_clock::time_point ::min();
 
 	for (auto && [session_id, session] : m_sessions)
@@ -154,11 +154,11 @@ std::shared_ptr<tt_program::http_session> http_client::find_http_session(ssl::en
 }
 
 
-std::shared_ptr<tt_program::http_session> http_client::create_http_session(ssl::disabled_ssl)
+std::shared_ptr<tt_tests::http_session> http_client::create_http_session(ssl::disabled_ssl)
 {
-	std::shared_ptr<tt_program::http_session> session;
+	std::shared_ptr<tt_tests::http_session> session;
 
-	session = std::make_shared<tt_program::http_session>(m_io_context, ssl::disabled_ssl{});
+	session = std::make_shared<tt_tests::http_session>(m_io_context, ssl::disabled_ssl{});
 	
 	map_session(session);
 
@@ -166,11 +166,11 @@ std::shared_ptr<tt_program::http_session> http_client::create_http_session(ssl::
 }
 
 
-std::shared_ptr<tt_program::http_session> http_client::create_http_session(ssl::enabled_ssl)
+std::shared_ptr<tt_tests::http_session> http_client::create_http_session(ssl::enabled_ssl)
 {
-	std::shared_ptr<tt_program::http_session> session;
+	std::shared_ptr<tt_tests::http_session> session;
 
-	session = std::make_shared<tt_program::http_session>(m_io_context, ssl::enabled_ssl{});
+	session = std::make_shared<tt_tests::http_session>(m_io_context, ssl::enabled_ssl{});
 	
 	map_session(session);
 
@@ -178,7 +178,7 @@ std::shared_ptr<tt_program::http_session> http_client::create_http_session(ssl::
 }
 
 
-void http_client::map_session(std::shared_ptr<tt_program::http_session> session)
+void http_client::map_session(std::shared_ptr<tt_tests::http_session> session)
 {
 	std::string session_id;
 	
@@ -208,13 +208,13 @@ void http_client::on_steady_timer(const boost::system::error_code& ec)
 	if (m_steady_timer.expiry() <= boost::asio::steady_timer::clock_type::now())
     {
         
-        std::chrono::milliseconds timeout = std::max(std::chrono::milliseconds(5000),  tt_program::default_inactive_timeout /3);
+        std::chrono::milliseconds timeout = std::max(std::chrono::milliseconds(5000),  tt_tests::default_inactive_timeout /3);
         if (m_sessions.empty())
-            timeout = tt_program::default_inactive_timeout;
+            timeout = tt_tests::default_inactive_timeout;
 
         m_steady_timer.expires_after(timeout);
 
-        std::chrono::steady_clock::time_point limit_time = std::chrono::steady_clock::now() - tt_program::default_inactive_timeout;
+        std::chrono::steady_clock::time_point limit_time = std::chrono::steady_clock::now() - tt_tests::default_inactive_timeout;
 
         for (auto iter = m_sessions.cbegin(); iter != m_sessions.cend(); )
         {

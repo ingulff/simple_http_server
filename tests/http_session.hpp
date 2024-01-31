@@ -10,7 +10,7 @@
 #include <boost/beast/ssl.hpp>
 
 
-namespace tt_program
+namespace tt_tests
 {
 using namespace std::chrono_literals;
 constexpr std::chrono::milliseconds default_inactive_timeout = 1000ms;
@@ -90,7 +90,7 @@ private:
 	std::shared_ptr<http_session_impl> m_impl;
 };
 
-} // namespace tt_program
+} // namespace tt_tests
 
 #endif // TT_HTTP_SESSION_HPP
 

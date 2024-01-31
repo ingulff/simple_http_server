@@ -18,13 +18,13 @@
 #include <boost/beast/version.hpp>
 
 // boost
-//#include <libs/beast/example/common/root_certificates.hpp>
+#include <libs/beast/example/common/root_certificates.hpp>
 
 #include "error/error.hpp"
 #include "http_session.hpp"
 #include "utils/algorithm.hpp"
 
-namespace tt_program
+namespace tt_tests
 {
 
 class http_session::http_session_impl : public std::enable_shared_from_this<http_session_impl>
@@ -43,7 +43,7 @@ public:
 	explicit http_session_impl(boost::asio::io_context & io_context, ssl::enabled_ssl)
 		: m_resolver(io_context)
 		, m_io_context(io_context)
-		, m_ssl_context(std::in_place, boost::asio::ssl::context::tlsv13_client)
+		, m_ssl_context(std::in_place, boost::asio::ssl::context::tlsv12_client)
 		, m_stream(std::in_place_type< boost::beast::ssl_stream<boost::beast::tcp_stream> >, io_context, *m_ssl_context)
 		, m_buffer()
 		, m_request()
@@ -55,7 +55,7 @@ public:
 	{
 		boost::beast::error_code error;
         // This holds the root certificate used for verification
-	    //::load_root_certificates(*m_ssl_context, error);
+	    ::load_root_certificates(*m_ssl_context, error);
 	}
 
 	explicit http_session_impl(boost::asio::io_context & io_context, ssl::disabled_ssl)
@@ -106,7 +106,7 @@ public:
 	{
 		m_callback = std::move(callbask);
 		connect_t old_settings = std::exchange(m_settings, std::move(settings) );
-		
+
 		if ( (m_status != status::connected && m_status != status::wait_next_request) || old_settings.host != m_settings.host || old_settings.port != m_settings.port)
 		{
 			return connect(m_settings.host, std::to_string(m_settings.port));
@@ -148,7 +148,7 @@ private:
         {
             //set verify mode.
 			auto self_shared = this->shared_from_this();
-            std::visit(utils::overloaded{ 
+            std::visit(tt_program::utils::overloaded{ 
                 [](boost::beast::tcp_stream&){ assert(false); },
                 [this, self_shared](boost::beast::ssl_stream<boost::beast::tcp_stream>& stream)
                 {
@@ -159,9 +159,9 @@ private:
                         return on_error(boost::asio::error::make_error_code(static_cast<boost::asio::error::ssl_errors>( ::ERR_get_error() )));
                     }
 
-					stream.set_verify_mode(boost::asio::ssl::verify_none);
-                    //stream.set_verify_mode(boost::asio::ssl::verify_peer);// | boost::asio::ssl::verify_fail_if_no_peer_cert);
-					stream.set_verify_callback(std::bind(&http_session_impl::verify_certyficate, self_shared, std::placeholders::_1, std::placeholders::_2));
+					//stream.set_verify_mode(boost::asio::ssl::verify_none);
+                    stream.set_verify_mode(boost::asio::ssl::verify_peer);// | boost::asio::ssl::verify_fail_if_no_peer_cert);
+					//stream.set_verify_callback(std::bind(&http_session_impl::verify_certyficate, self_shared, std::placeholders::_1, std::placeholders::_2));
                 }
             }, m_stream);    
         }
@@ -200,13 +200,13 @@ private:
 			on_error(error);
 			return;
 		}
-		
+
 		if (m_ssl_context)
         {
 			set_status(status::handshaking);
 
 			auto self_shared = this->shared_from_this();
-			std::visit(utils::overloaded{
+			std::visit(tt_program::utils::overloaded{
 				[](boost::beast::tcp_stream&){ assert(false); },
 				[this, self_shared, error](boost::beast::ssl_stream<boost::beast::tcp_stream>& stream)
 				{
@@ -279,6 +279,7 @@ private:
 
 		if( error )
 		{
+			on_error(error);
 			return;
 		}
 
@@ -372,5 +373,5 @@ void http_session::send(connect_t settings, response_callback_t callbask)
 	m_impl->send(std::move(settings), std::move(callbask) );
 }
 
-} // namespace tt_program
+} // namespace tt_tests
 
