@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <type_traits>
 
+
+#include <iostream>
 namespace error
 {
 
@@ -11,8 +13,10 @@ enum class http_errc : std::int16_t
 {
     unknown = 1,
     sucesss = 200,
+    moved_permanently = 301,
     bad_request = 400,
     unautorized = 401, // if you change this enum also change to_http_error
+    not_found = 404,
 };
 
 
@@ -22,13 +26,35 @@ int to_int(http_errc errc);
 template<typename Integer, std::enable_if_t<std::is_integral_v<Integer>, bool> = true>
 http_errc to_http_errc(Integer error_code)
 {
-    if(error_code >= to_int(http_errc::unknown)
-        && error_code <= to_int(http_errc::unautorized))
+    http_errc errc;
+    switch (error_code)
     {
-        return static_cast<http_errc>(error_code);
+        case 200:
+            errc = http_errc::sucesss;
+            break;
+
+        case 301:
+            errc = http_errc::moved_permanently;
+            break;
+
+        case 400:
+            errc = http_errc::bad_request;
+            break;
+
+        case 401:
+            errc = http_errc::unautorized;
+            break;
+
+        case 404:
+            errc = http_errc::not_found;
+            break;
+    
+        default:
+            errc = http_errc::unknown;
+            break;
     }
 
-    return http_errc::unknown;
+    return errc;
 }
 
 template<typename NonInteger, std::enable_if_t<!std::is_integral_v<NonInteger>, bool> = true>
