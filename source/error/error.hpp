@@ -10,7 +10,7 @@ enum class errc
 	unknown              = 0x1,
 	invalid_argument     = 0x2,
 	invalid_config       = 0x3,
-	cant_send_http       = 0x4,
+	cant_send_http       = 0x4, // @todo delete this
 };
 
 int to_int(errc error_code) noexcept;

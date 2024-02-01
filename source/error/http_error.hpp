@@ -12,7 +12,7 @@ namespace error
 enum class http_errc : std::int16_t
 {
     unknown = 1,
-    sucesss = 200,
+    successs = 200,
     moved_permanently = 301,
     bad_request = 400,
     unautorized = 401, // if you change this enum also change to_http_error
@@ -30,7 +30,7 @@ http_errc to_http_errc(Integer error_code)
     switch (error_code)
     {
         case 200:
-            errc = http_errc::sucesss;
+            errc = http_errc::successs;
             break;
 
         case 301:
