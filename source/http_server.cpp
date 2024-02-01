@@ -29,7 +29,9 @@ void http_server::run(connect_t settings)
     m_io_context = std::make_shared<boost::asio::io_context>(m_settings.threads_count);
     m_ssl_context = std::make_shared<boost::asio::ssl::context>(boost::asio::ssl::context::tlsv12);
     // This holds the self-signed certificate used by the server
-    load_server_certificate(*m_ssl_context);
+    ::load_server_certificate(*m_ssl_context);
+    m_ssl_context->set_options( /* boost::asio::ssl::context::default_workarounds | */
+                        boost::asio::ssl::context::verify_peer );
     m_listener = std::make_shared<listener>(*m_io_context, 
         *m_ssl_context,
         boost::asio::ip::tcp::endpoint{boost::asio::ip::make_address(m_settings.host), m_settings.port},
