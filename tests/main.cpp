@@ -82,19 +82,19 @@ TEST_CASE("single_client_session")
 		tt_tests::utils::is_reseived = false;
 		tt_tests::utils::is_valid_file = false;
 		tt_tests::utils::expected_errc = error::http_errc::not_found;
-		auto settings = tt_tests::make_connect("/test__qqwerty.txt", "127.0.0.1", 1234, 11, tt_tests::http_client::http_method::GET);
+		auto settings = tt_tests::make_connect("/qwerty", "127.0.0.1", 1234, 11, tt_tests::http_client::http_method::GET);
 
-		client.send_http( settings );
+		client.send_https( settings );
 
 		io_context.run();
 		CHECK(tt_tests::utils::is_reseived != false);
 	}
-#if 0
+
 	SUBCASE("single_request_to_http_server_exist_file")
 	{
 		tt_tests::utils::is_reseived = false;
-		tt_tests::utils::is_valid_file = false;
-		tt_tests::utils::expected_errc = error::http_errc::not_found;
+		tt_tests::utils::is_valid_file = true;
+		tt_tests::utils::expected_errc = error::http_errc::successs;
 		auto settings = tt_tests::make_connect("/resource/uploadtest_.txt", "127.0.0.1", 1234, 11, tt_tests::http_client::http_method::GET);
 
 		client.send_https( settings );
@@ -102,7 +102,7 @@ TEST_CASE("single_client_session")
 		io_context.run();
 		CHECK(tt_tests::utils::is_reseived != false);
 	}
-#endif
+
 }
 
 
@@ -114,5 +114,6 @@ TEST_CASE("clear_section")
 
 	REQUIRE_NOTHROW(tt_tests::generate_download_filepaths(tt_tests::download_resourse_dir));
 
-	//REQUIRE(tt_tests::clear_downloading_directory() == std::error_code{});
+	REQUIRE(tt_tests::clear_downloading_directory() == std::error_code{});
 }
+
