@@ -9,6 +9,8 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/ssl.hpp>
 
+#include "auth_gater.hpp"
+
 namespace tt_program
 {
 
@@ -19,7 +21,8 @@ public:
     listener(boost::asio::io_context& ioc,
         boost::asio::ssl::context& ctx,
         boost::asio::ip::tcp::endpoint endpoint,
-        std::shared_ptr<std::string const> const& doc_root);
+        std::shared_ptr<std::string const> const& doc_root,
+        tt_program::auth_gater & auth_gate);
 
     // Start accepting incoming connections
     void run();
@@ -35,6 +38,7 @@ private:
     boost::asio::ssl::context& m_ssl_context;
     boost::asio::ip::tcp::acceptor m_acceptor;
     std::shared_ptr<std::string const> m_uploads_path;
+    tt_program::auth_gater & m_auth_gate;
 
 };
 

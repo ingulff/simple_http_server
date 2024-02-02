@@ -7,6 +7,7 @@
 #include <boost/beast/http/string_body.hpp>
 #include <boost/beast/http/read.hpp>
 
+#include "auth_gater.hpp"
 #include "http_session.hpp"
 #include "request_handler.hpp"
 #include "utils/fail_report.hpp"
@@ -19,9 +20,11 @@ namespace tt_program
 http_session::http_session(
     boost::asio::ip::tcp::socket&& socket,
     boost::asio::ssl::context& ctx,
-    std::shared_ptr<std::string const> const& doc_root)
+    std::shared_ptr<std::string const> const& doc_root,
+    tt_program::auth_gater & auth_gate)
         : m_stream(std::move(socket), ctx)
         , m_uploads_path(doc_root)
+        , m_auth_gate(auth_gate)
 {}
 
 // Start the asynchronous operation
@@ -89,7 +92,7 @@ void http_session::on_read(boost::beast::error_code ec, std::size_t bytes_transf
 
     // Send the response
     send_response(
-        tt_program::handle_request(*m_uploads_path, std::move(m_request)));
+        tt_program::handle_request(*m_uploads_path, std::move(m_request), m_auth_gate));
 }
 
 void http_session::send_response(boost::beast::http::message_generator&& msg)

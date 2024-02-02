@@ -18,7 +18,8 @@ public:
     explicit http_session(
         boost::asio::ip::tcp::socket&& socket,
         boost::asio::ssl::context& ctx,
-        std::shared_ptr<std::string const> const& doc_root);
+        std::shared_ptr<std::string const> const& doc_root,
+        tt_program::auth_gater & auth_gate);
 
     // Start the asynchronous operation
     void
@@ -47,6 +48,7 @@ private:
     boost::beast::flat_buffer m_buffer;
     std::shared_ptr<std::string const> m_uploads_path;
     boost::beast::http::request<boost::beast::http::string_body> m_request;
+    tt_program::auth_gater & m_auth_gate;
 };
 
 } // namespace tt_program

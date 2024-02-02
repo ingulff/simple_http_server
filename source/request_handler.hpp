@@ -8,7 +8,13 @@
 #include <boost/beast/http/string_body.hpp>
 #include <boost/beast/version.hpp>
 
+#include "auth_gater.hpp"
+#include "utils/algorithm.hpp"
 #include "utils/files_prepare.hpp"
+
+#include <iostream>
+#include <filesystem>
+#include <fstream>
 
 namespace tt_program
 {
@@ -21,7 +27,8 @@ template <class Body, class Allocator>
 boost::beast::http::message_generator
 handle_request(
     boost::beast::string_view doc_root,
-    boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>>&& req)
+    boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>>&& req,
+    const tt_program::auth_gater & auth_gate)
 {
     // Returns a bad request response
     auto const bad_request =
@@ -62,10 +69,30 @@ handle_request(
         return res;
     };
 
+    // Not or invalid token
+    auto const auth_failed = 
+    [&req](boost::beast::string_view what)
+    {
+        boost::beast::http::response<boost::beast::http::string_body> res{boost::beast::http::status::unauthorized, req.version()};
+        res.set(boost::beast::http::field::server, BOOST_BEAST_VERSION_STRING);
+        res.set(boost::beast::http::field::content_type, "text/html");
+        res.keep_alive(req.keep_alive());
+        res.body() = "An error occurred: '" + std::string(what) + "'";
+        res.prepare_payload();
+        return res;
+    };
+
     // Make sure we can handle the method
     if( req.method() != boost::beast::http::verb::get &&
         req.method() != boost::beast::http::verb::head)
         return bad_request("Unknown HTTP-method");
+
+    // check auth
+    if( auth_gate.is_valid_request(req) == false )
+    {
+        return auth_failed("Unauthorized request");
+    }
+
 
     // Request path must be absolute and not contain "..".
     if( req.target().empty() ||
@@ -76,7 +103,7 @@ handle_request(
     // Build the path to the requested file
     std::string path = tt_program::utils::path_cat(doc_root, req.target());
     if(req.target().back() == '/')
-        path.append("index.html");
+        return bad_request("Illegal request-target");
 
     // Attempt to open the file
     boost::beast::error_code ec;
@@ -85,12 +112,15 @@ handle_request(
 
     // Handle the case where the file doesn't exist
     if(ec == boost::beast::errc::no_such_file_or_directory)
+    {
         return not_found(req.target());
+    }
 
     // Handle an unknown error
     if(ec)
+    {
         return server_error(ec.message());
-
+    }
     // Cache the size since we need it after the move
     auto const size = body.size();
 

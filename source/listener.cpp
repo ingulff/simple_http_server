@@ -12,6 +12,7 @@
 #include "http_session.hpp"
 #include "utils/fail_report.hpp"
 
+#include "auth_gater.hpp"
 #include "listener.hpp"
 
 namespace tt_program
@@ -22,11 +23,13 @@ listener::listener(
         boost::asio::io_context& io_context,
         boost::asio::ssl::context& ssl_context,
         boost::asio::ip::tcp::endpoint endpoint,
-        std::shared_ptr<std::string const> const& uploads_path)
+        std::shared_ptr<std::string const> const& uploads_path,
+        tt_program::auth_gater & auth_gate)
         : m_io_context(io_context)
         , m_ssl_context(ssl_context)
         , m_acceptor(io_context)
         , m_uploads_path(uploads_path)
+        , m_auth_gate(auth_gate)
 {
     boost::beast::error_code ec;
 
@@ -92,7 +95,8 @@ void listener::on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::sock
         std::make_shared<tt_program::http_session>(
             std::move(socket),
             m_ssl_context,
-            m_uploads_path)->run();
+            m_uploads_path,
+            m_auth_gate)->run();
     }
 
     // Accept another connection

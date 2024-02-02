@@ -12,6 +12,7 @@
 // boost def certs
 #include "libs/beast/example/common/server_certificate.hpp"
 
+#include "auth_gater.hpp"
 #include "listener.hpp"
 #include "settings.hpp"
 
@@ -33,6 +34,7 @@ private:
     std::shared_ptr<tt_program::listener> m_listener;
     std::optional<asio_work_guard_t> m_io_context_work;
     std::vector<std::thread> m_thread_pool;
+    tt_program::auth_gater m_auth_gate;
 };
 
 }  // namespace tt_program
