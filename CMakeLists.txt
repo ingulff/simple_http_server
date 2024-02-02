@@ -10,6 +10,8 @@ project(test_task
 # General options
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
+add_compile_definitions(_WIN32_WINNT=0x0601)
+
 option(TT_BUILD_TESTS "Enable build unit tests" ON)
 
 if(NOT DEFINED CMAKE_BUILD_TYPE AND NOT DEFINED CMAKE_CONFIGURATION_TYPES)

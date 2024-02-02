@@ -43,28 +43,10 @@ endif()
 # (Boring)SSL settings
 #-----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-#if(NOT DEFINED SSL_INCLUDE OR (SSL_INCLUDE STREQUAL ""))
-#    message(SEND_ERROR "SSL_INCLUDE - not found")
-#    config_instructions()
-#else()
-#    message(STATUS "SSL_INCLUDE - found: ${SSL_INCLUDE}")
-#endif()
-
-
-#if(NOT DEFINED SSL_LIB_DIR OR (SSL_LIB_DIR STREQUAL ""))
-#    message(SEND_ERROR "SSL_LIB_DIR - not found")
-#    config_instructions()
-#else()
-#    message(STATUS "SSL_LIB_DIR - found: ${SSL_LIB_DIR}")
-#endif()
 
 if(USE_OPEN_SSL)
     set(OPENSSL_ROOT_DIR ${SSL_INSTALL_PATH})
-    if(WIN32)
-        find_package(OpenSSL REQUIRED COMPONENTS Crypto SSL applink )
-    else()
-        find_package(OpenSSL REQUIRED COMPONENTS Crypto SSL )
-    endif()
+    find_package(OpenSSL REQUIRED COMPONENTS Crypto SSL ) 
 else()
 # todo
 endif()

@@ -102,6 +102,7 @@ if(MSVC)
 		COMPILE_OPTIONS 
 		/std:c++17
 		/Zc:__cplusplus
+		/bigobj
 	)
 else()
 	list(APPEND

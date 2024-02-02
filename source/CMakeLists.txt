@@ -83,6 +83,7 @@ if(MSVC)
 		COMPILE_OPTIONS
 		/std:c++17
 		/Zc:__cplusplus
+		/bigobj
 	)
 else()
 	list(APPEND
@@ -104,6 +105,10 @@ target_include_directories(${EXECUTABLE_TARGET_NAME}
 		${BOOST_INCLUDE}
 		${OPENSSL_INCLUDE_DIR}
 )
+
+if(UNIX)
+    target_link_libraries(${EXECUTABLE_TARGET_NAME} pthread)
+endif(UNIX)
 
 target_link_libraries(${EXECUTABLE_TARGET_NAME}
 	PRIVATE
