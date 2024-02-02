@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <sstream>
 #include <string>
 #include <variant>
 
@@ -251,8 +252,11 @@ private:
 		m_request.set(boost::beast::http::field::content_type, "text/html");
 		m_request.set(boost::beast::http::field::connection, "keep-alive");
 		m_request.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
-		std::string secret = std::to_string(m_settings.secret);
-		m_request.set("secret", secret);
+		if(m_settings.secret > 0)
+		{
+			std::string secret = std::to_string(m_settings.secret);
+			m_request.set("secret", secret);
+		}
 
 		auto self_shared = this->shared_from_this(); //MSVC bug: can't determine this->shared_from_this() inside lambda.
         std::visit([this, self_shared](auto& stream){
@@ -298,9 +302,11 @@ private:
 
 			auto callback = std::exchange(m_callback, nullptr);
 
-			auto result = m_response.body().data();
+			std::ostringstream file(std::ios::binary);
+			file << m_response.body();
+			std::string result = file.str();
 
-			callback(result, error_code);
+			callback(std::move(result), error_code);
 		}
 	}
 
