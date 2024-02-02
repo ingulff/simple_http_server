@@ -11,8 +11,6 @@ project(http_server
 # General options
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
-option(TT_USE_PRESET_FILE_MIME "Enable use small optimization based on file extention" ON)
-
 if(NOT DEFINED CMAKE_BUILD_TYPE AND NOT DEFINED CMAKE_CONFIGURATION_TYPES)
 	set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRING "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
@@ -27,15 +25,6 @@ set(DEFAULT_THREADS_COUNT 4)
 set(THREADS_COUNT ${DEFAULT_THREADS_COUNT})
 if(DEFINED TT_THREADS_NUMBER)
 	set(THRETHREADS_COUNTADS_NUMBER ${TT_THREADS_COUNT})
-endif()
-
-if(TT_USE_PRESET_FILE_MIME)
-	message(STATUS "Use preset file mime based on file extension:\n"
-	".htm saved in text/html\n"
-	".html saved in text/html\n"
-	".json saved in application/json\n"
-	".jpe saved in image/jpeg, "
-	"etc")
 endif()
 
 message(STATUS "taget:${EXECUTABLE_TARGET_NAME} option TT_USE_PRESET_FILE_MIME=${TT_USE_PRESET_FILE_MIME}")
