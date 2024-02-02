@@ -77,7 +77,7 @@ private:
 	const std::string_view m_https_label = "https";
 };
 
-http_client::connect_t make_connect(std::string target, std::string host, std::uint16_t port, std::uint16_t version, http_client::http_method method);
+http_client::connect_t make_connect(std::string host, std::uint16_t port, std::uint64_t secret, std::string target, std::uint16_t version, http_client::http_method method);
 
 } // namespace tt_tests
 

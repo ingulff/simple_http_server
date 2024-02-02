@@ -105,9 +105,13 @@ public:
 	void send(connect_t settings, response_callback_t callbask)
 	{
 		m_callback = std::move(callbask);
-		connect_t old_settings = std::exchange(m_settings, std::move(settings) );
+		std::string old_host = std::move(m_settings.host);
+		std::uint16_t old_port = m_settings.port;
 
-		if ( (m_status != status::connected && m_status != status::wait_next_request) || old_settings.host != m_settings.host || old_settings.port != m_settings.port)
+		m_settings = std::move(settings);
+
+
+		if ( (m_status != status::connected && m_status != status::wait_next_request) || old_host != m_settings.host || old_port != m_settings.port)
 		{
 			return connect(m_settings.host, std::to_string(m_settings.port));
 		}
@@ -139,7 +143,7 @@ private:
 		if( error )
 		{
 			on_error(error);
-			return;
+		return;
 		}
 
 		set_status(status::connecting);
@@ -159,8 +163,8 @@ private:
                         return on_error(boost::asio::error::make_error_code(static_cast<boost::asio::error::ssl_errors>( ::ERR_get_error() )));
                     }
 
-					//stream.set_verify_mode(boost::asio::ssl::verify_none);
-                    stream.set_verify_mode(boost::asio::ssl::verify_peer);// | boost::asio::ssl::verify_fail_if_no_peer_cert);
+					stream.set_verify_mode(boost::asio::ssl::verify_none);
+                    //stream.set_verify_mode(boost::asio::ssl::verify_peer);// | boost::asio::ssl::verify_fail_if_no_peer_cert);
 					//stream.set_verify_callback(std::bind(&http_session_impl::verify_certyficate, self_shared, std::placeholders::_1, std::placeholders::_2));
                 }
             }, m_stream);    
@@ -247,6 +251,8 @@ private:
 		m_request.set(boost::beast::http::field::content_type, "text/html");
 		m_request.set(boost::beast::http::field::connection, "keep-alive");
 		m_request.set(boost::beast::http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+		std::string secret = std::to_string(m_settings.secret);
+		m_request.set("secret", secret);
 
 		auto self_shared = this->shared_from_this(); //MSVC bug: can't determine this->shared_from_this() inside lambda.
         std::visit([this, self_shared](auto& stream){
@@ -304,7 +310,7 @@ private:
         m_last_activity = std::chrono::steady_clock::now();
         if (auto callback = std::exchange(m_callback, nullptr))
         {
-            auto error = error::to_int(error::errc::cant_send_http);
+            auto error = m_response.result_int();
             //boost::asio::post(m_io_context, std::bind(callback, response, m_current_packet, ec));
             auto result = m_response.body().data();
 

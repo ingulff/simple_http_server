@@ -234,9 +234,9 @@ void http_client::on_steady_timer(const boost::system::error_code& ec)
     } // timer.expiry() <= now
 }
 
-http_client::connect_t make_connect(std::string target, std::string host, std::uint16_t port, std::uint16_t version, http_client::http_method method)
+http_client::connect_t make_connect(std::string host, std::uint16_t port, std::uint64_t secret, std::string target, std::uint16_t version, http_client::http_method method)
 {
-	return { std::move(target), std::move(host), port, version, method };
+	return { std::move(host), port, secret, std::move(target), version, method };
 }
 
 } // namespace tt_tests

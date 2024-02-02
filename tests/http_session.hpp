@@ -27,9 +27,10 @@ public:
 
 	struct connect_t
 	{
-		std::string target;
 		std::string host;
 		std::uint16_t port;
+		std::uint64_t secret;
+		std::string target;
 		std::uint16_t version;
 		http_method method;
 	};

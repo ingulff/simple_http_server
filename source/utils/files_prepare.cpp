@@ -24,6 +24,7 @@ boost::beast::string_view mime_type(boost::beast::string_view path)
     if(iequals(ext, ".htm"))  return "text/html";
     if(iequals(ext, ".html")) return "text/html";
     if(iequals(ext, ".php"))  return "text/html";
+    if(iequals(ext, ".txt"))  return "text/txt";
     if(iequals(ext, ".css"))  return "text/css";
     if(iequals(ext, ".txt"))  return "text/plain";
     if(iequals(ext, ".js"))   return "application/javascript";
