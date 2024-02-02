@@ -20,7 +20,6 @@
 #include "stream_crc32.hpp"
 #include "utils/filesystem_helpers.hpp"
 #include "utils/files_prepare.hpp"
-#include <iostream>
 namespace tt_tests
 {
 
@@ -30,7 +29,6 @@ static void append_uploads_targets_files(std::vector<std::string> & paths, const
     {
         if(std::filesystem::is_regular_file(elem))
         {
-//std::cout << elem.path().string().substr(root_path.size()) << std::endl;
             std::string target_path = {"/"};
             target_path += 
             paths.emplace_back(elem.path().string().substr(root_path.size()));
@@ -173,8 +171,8 @@ std::error_code clear_downloading_directory()
     return error;
 }
 
-static constexpr std::int64_t token_gate_size = 10000; // gate is segment - {left..right}
-static constexpr std::int64_t token_test_count = token_gate_size / 2;
+static constexpr std::int64_t token_gate_size = 6000; // gate is segment - {left..right}
+static constexpr std::int64_t token_test_count = 1000;
 
 static std::map<std::uint64_t, std::uint64_t> gates;
 
@@ -183,7 +181,6 @@ void generate_config_gates(const std::string_view & filepath)
     std::filesystem::path entry(filepath);
     bool exist = std::filesystem::exists(entry);
     bool is_reg_file = std::filesystem::is_regular_file(entry);
-std::cout << "exist: " << exist << " reg f: " << is_reg_file << std::endl;
     if(exist && is_reg_file)
     {
         return;
@@ -200,7 +197,6 @@ std::cout << "exist: " << exist << " reg f: " << is_reg_file << std::endl;
         mean = uniform_dist(e1))
     {
         auth_tokens.insert(mean);
-//std::cout << "mean: " << mean << std::endl;
     }
     
     bool is_right_bound = false;
@@ -231,11 +227,9 @@ std::cout << "exist: " << exist << " reg f: " << is_reg_file << std::endl;
         file.close();
         throw std::ios_base::failure(error_msg);
     }
-//std::cout << "write to file" << std::endl;
     for(auto & [right, left]: gates)
     {
         file << left << " " << right << std::endl;
-//std::cout << "bound: " << std::endl;
     }
 
     file.close();
@@ -278,7 +272,6 @@ void generate_tests_tokens(const std::string_view & filepath)
         auth_tokens.size() < token_test_count; 
         mean = uniform_dist(e1))
     {
-//std::cout << "bound: ++" << std::endl;
         auto pos = gates.lower_bound(mean);
         if(pos != std::cend(gates) && ( mean <= pos->first && mean >= pos->second)) // sort segments by right bouns
         {

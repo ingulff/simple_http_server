@@ -12,10 +12,6 @@
 #include "utils/algorithm.hpp"
 #include "utils/files_prepare.hpp"
 
-#include <iostream>
-#include <filesystem>
-#include <fstream>
-
 namespace tt_program
 {
 
@@ -88,7 +84,7 @@ handle_request(
         return bad_request("Unknown HTTP-method");
 
     // check auth
-    if( auth_gate.is_valid_request(req) == false )
+    if( auth_gate.is_auth_valid(req) == false )
     {
         return auth_failed("Unauthorized request");
     }

@@ -4,7 +4,7 @@
 #include <sstream>
 
 #include "error/http_error.hpp"
-#include "utils/filepaths.hpp"
+#include "utils/file_generators.hpp"
 #include "utils/stream_crc32.hpp"
 
 namespace tt_tests::utils
@@ -17,16 +17,15 @@ inline bool is_reseived = false;
 
 } // tt_tests::utils
 
-#include <iostream>
 void handle_response_body(std::string response, std::uint32_t errc)
 {
-    std::istringstream stream{std::move(response)};
+    std::istringstream stream{std::move(response), std::ios::binary};
         
     auto handler = tt_tests::make_stream_crc32();
     auto hash = handler->calc_crc32(stream);
-std::cout << "on receive " << std::endl;
-    CHECK(tt_tests::utils::expected_errc == error::to_http_errc(errc));
-    CHECK(tt_tests::utils::is_valid_file == tt_tests::upload_files_hashs.count(hash));
+
+    REQUIRE(tt_tests::utils::expected_errc == error::to_http_errc(errc));
+    REQUIRE(tt_tests::utils::is_valid_file == tt_tests::upload_files_hashs.count(hash));
     tt_tests::utils::is_reseived = true;
 }
 

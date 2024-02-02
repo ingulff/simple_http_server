@@ -16,8 +16,6 @@
 
 #include <3rdparty/Crc32/Crc32.h>
 
-#include <iostream>
-
 namespace tt_tests
 {
 
