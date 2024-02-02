@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <functional>
+#include <ios>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -31,6 +32,11 @@ int main(int argc, char* argv[])
     {
         std::cerr << e.what() << std::endl;
         errc = error::to_int(error::errc::invalid_argument);
+    }
+    catch(std::ios_base::failure e)
+    {
+        std::cerr << e.what() << std::endl;
+        errc = error::to_int(error::errc::file_operation_abort);
     }
     catch(...)
     {
