@@ -9,5 +9,6 @@ out/
 *.jpg
 
 /resource
+/configs
 
 cmake/3rdparty_config.cmake
