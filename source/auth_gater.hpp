@@ -10,7 +10,7 @@
 #include <boost/beast/http/message_generator.hpp>
 
 #include "utils/algorithm.hpp"
-#include <iostream>
+
 namespace tt_program
 {
 
@@ -29,7 +29,7 @@ public:
 
 public:
     template <class Body, class Allocator>
-    bool is_valid_request(const boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>>& request) const
+    bool is_auth_valid(const boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>>& request) const
     {
         bool res = false;
         // Check auth=key
