@@ -61,7 +61,7 @@ TEST_CASE("prepare_files")
 }
 
 
-TEST_CASE("single_client_session_without_auth-key")
+TEST_CASE("single_client_session_with_single_request")
 {
 	check_pregenerated_files();
 
@@ -94,13 +94,20 @@ TEST_CASE("single_client_session_without_auth-key")
 		CHECK(tt_tests::utils::is_reseived != false);
 	}
 #endif
-	SUBCASE("single_request_to_http_server_file_no_exist")
+
+	SUBCASE("single_cllient_nonexist_file_without_secret")
 	{
 		tt_tests::http_client client( io_context, { handle_response_body } );
 		tt_tests::utils::is_reseived = false;
 		tt_tests::utils::is_valid_file = false;
 		tt_tests::utils::expected_errc = error::http_errc::unautorized;
-		auto settings = tt_tests::make_connect(std::string{ tt_tests::server_host }, tt_tests::server_port, 0, "/qwerty", 11, tt_tests::http_client::http_method::GET);
+		auto settings = tt_tests::make_connect(
+			std::string{ tt_tests::server_host }, 
+			tt_tests::server_port, 
+			0, 
+			"/qwerty", 
+			11, 
+			tt_tests::http_client::http_method::GET);
 
 		client.send_https( settings );
 
@@ -108,35 +115,39 @@ TEST_CASE("single_client_session_without_auth-key")
 		CHECK(tt_tests::utils::is_reseived != false);
 	}
 
-	SUBCASE("single_request_to_http_server_exist_file")
+	SUBCASE("single_cllient_nonexist_file_with_fake_secret")
 	{
 		tt_tests::http_client client( io_context, { handle_response_body } );
 		tt_tests::utils::is_reseived = false;
 		tt_tests::utils::is_valid_file = false;
 		tt_tests::utils::expected_errc = error::http_errc::unautorized;
-		auto settings = tt_tests::make_connect( std::string{ tt_tests::server_host }, tt_tests::server_port, 0, { tt_tests::upload_target_filepaths[0] }, 11, tt_tests::http_client::http_method::GET);
+		auto settings = tt_tests::make_connect(
+			std::string{ tt_tests::server_host }, 
+			tt_tests::server_port, 
+			*(std::begin(tt_tests::fake_auth_tokens)), 
+			"/qwerty", 
+			11, 
+			tt_tests::http_client::http_method::GET);
 
 		client.send_https( settings );
 
 		io_context.run();
 		CHECK(tt_tests::utils::is_reseived != false);
 	}
-}
 
-
-TEST_CASE("single_client_session_with_auth-key")
-{
-	check_pregenerated_files();
-
-	boost::asio::io_context io_context;
-
-	SUBCASE("single_request_to_http_server_file_no_exist")
+	SUBCASE("single_cllient_nonexist_file_with_secret")
 	{
 		tt_tests::http_client client( io_context, { handle_response_body } );
 		tt_tests::utils::is_reseived = false;
 		tt_tests::utils::is_valid_file = false;
 		tt_tests::utils::expected_errc = error::http_errc::not_found;
-		auto settings = tt_tests::make_connect(std::string{ tt_tests::server_host }, tt_tests::server_port, *(std::cbegin(tt_tests::auth_tokens)), "/qwerty", 11, tt_tests::http_client::http_method::GET);
+		auto settings = tt_tests::make_connect( 
+			std::string{ tt_tests::server_host }, 
+			tt_tests::server_port, 
+			*(std::begin(tt_tests::auth_tokens)), 
+			"/qwerty", 
+			11, 
+			tt_tests::http_client::http_method::GET);
 
 		client.send_https( settings );
 
@@ -144,21 +155,236 @@ TEST_CASE("single_client_session_with_auth-key")
 		CHECK(tt_tests::utils::is_reseived != false);
 	}
 
-	SUBCASE("single_request_to_http_server_exist_file")
+	SUBCASE("single_cllient_exist_file_without_secret")
+	{
+		tt_tests::http_client client( io_context, { handle_response_body } );
+		tt_tests::utils::is_reseived = false;
+		tt_tests::utils::is_valid_file = false;
+		tt_tests::utils::expected_errc = error::http_errc::unautorized;
+		auto settings = tt_tests::make_connect( 
+			std::string{ tt_tests::server_host }, 
+			tt_tests::server_port, 
+			0, 
+			{ tt_tests::upload_target_filepaths[0] }, 
+			11, 
+			tt_tests::http_client::http_method::GET);
+
+		client.send_https( settings );
+
+		io_context.run();
+		CHECK(tt_tests::utils::is_reseived != false);
+	}
+
+	SUBCASE("single_cllient_exist_file_with_fake_secret")
+	{
+		tt_tests::http_client client( io_context, { handle_response_body } );
+		tt_tests::utils::is_reseived = false;
+		tt_tests::utils::is_valid_file = false;
+		tt_tests::utils::expected_errc = error::http_errc::unautorized;
+		auto settings = tt_tests::make_connect( 
+			std::string{ tt_tests::server_host }, 
+			tt_tests::server_port, 
+			*(std::begin(tt_tests::fake_auth_tokens)), 
+			{ tt_tests::upload_target_filepaths[0] }, 
+			11, 
+			tt_tests::http_client::http_method::GET);
+
+		client.send_https( settings );
+
+		io_context.run();
+		CHECK(tt_tests::utils::is_reseived != false);
+	}
+
+	SUBCASE("single_cllient_exist_file_with_secret")
 	{
 		tt_tests::http_client client( io_context, { handle_response_body } );
 		tt_tests::utils::is_reseived = false;
 		tt_tests::utils::is_valid_file = true;
 		tt_tests::utils::expected_errc = error::http_errc::successs;
-		auto settings = tt_tests::make_connect( std::string{ tt_tests::server_host }, tt_tests::server_port, *(std::cbegin(tt_tests::auth_tokens)), { tt_tests::upload_target_filepaths[0] }, 11, tt_tests::http_client::http_method::GET);
+		auto settings = tt_tests::make_connect( 
+			std::string{ tt_tests::server_host }, 
+			tt_tests::server_port, 
+			*(std::begin(tt_tests::auth_tokens)), 
+			{ tt_tests::upload_target_filepaths[0] }, 
+			11, 
+			tt_tests::http_client::http_method::GET);
 
 		client.send_https( settings );
 
 		io_context.run();
 		CHECK(tt_tests::utils::is_reseived != false);
 	}
-
 }
+
+
+TEST_CASE("single_client_multiple_nonexist_files_without_secret")
+{
+	check_pregenerated_files();
+
+	boost::asio::io_context io_context;
+
+	tt_tests::http_client client( io_context, { handle_response_body } );
+
+	tt_tests::utils::is_reseived = false;
+	tt_tests::utils::is_valid_file = false;
+	tt_tests::utils::expected_errc = error::http_errc::unautorized;
+	for(std::uint32_t i = 0; i < tt_tests::fake_auth_tokens.size(); ++i)  // fake_auth_tokens.size() = token_test_count in file_generators.cpp (def 5000)
+	{
+		auto settings = tt_tests::make_connect(
+			std::string{ tt_tests::server_host }, 
+			tt_tests::server_port, 
+			0, 
+			"/qwerty", 
+			11, 
+			tt_tests::http_client::http_method::GET);
+
+		client.send_https( settings );
+		io_context.run(); // ?
+	}
+}
+
+
+TEST_CASE("single_client_multiple_nonexist_files_with_fake_secret")
+{
+	check_pregenerated_files();
+
+	boost::asio::io_context io_context;
+
+	tt_tests::http_client client( io_context, { handle_response_body } );
+
+	tt_tests::utils::is_reseived = false;
+	tt_tests::utils::is_valid_file = false;
+	tt_tests::utils::expected_errc = error::http_errc::unautorized;
+	auto key_pos = std::begin(tt_tests::fake_auth_tokens);
+	for(std::uint32_t i = 0; i < tt_tests::fake_auth_tokens.size(); ++i)
+	{
+		auto settings = tt_tests::make_connect(
+			std::string{ tt_tests::server_host }, 
+			tt_tests::server_port, 
+			*key_pos, 
+			"/qwerty", 
+			11, 
+			tt_tests::http_client::http_method::GET);
+
+		client.send_https( settings );
+		io_context.run(); // ?
+	}
+}
+
+
+TEST_CASE("single_client_multiple_nonexist_files_with_secret")
+{
+	check_pregenerated_files();
+
+	boost::asio::io_context io_context;
+
+	tt_tests::http_client client( io_context, { handle_response_body } );
+
+	tt_tests::utils::is_reseived = false;
+	tt_tests::utils::is_valid_file = false;
+	tt_tests::utils::expected_errc = error::http_errc::not_found;
+	auto key_pos = std::begin(tt_tests::auth_tokens);
+	for(std::uint32_t i = 0; i < tt_tests::auth_tokens.size(); ++i)
+	{
+		auto settings = tt_tests::make_connect(
+			std::string{ tt_tests::server_host }, 
+			tt_tests::server_port, 
+			*key_pos, 
+			"/qwerty", 
+			11, 
+			tt_tests::http_client::http_method::GET);
+
+		client.send_https( settings );
+		io_context.run(); // ?
+	}
+}
+
+
+TEST_CASE("single_client_multiple_exist_files_without_secret")
+{
+	check_pregenerated_files();
+
+	boost::asio::io_context io_context;
+
+	tt_tests::http_client client( io_context, { handle_response_body } );
+
+	tt_tests::utils::is_reseived = false;
+	tt_tests::utils::is_valid_file = false;
+	tt_tests::utils::expected_errc = error::http_errc::unautorized;
+	for(std::uint32_t i = 0, targets_size = tt_tests::upload_target_filepaths.size(); 
+		i < tt_tests::fake_auth_tokens.size(); ++i)  // fake_auth_tokens.size() = token_test_count in file_generators.cpp (def 5000)
+	{
+		auto settings = tt_tests::make_connect(
+			std::string{ tt_tests::server_host }, 
+			tt_tests::server_port, 
+			0, 
+			{ tt_tests::upload_target_filepaths[i % targets_size] }, 
+			11, 
+			tt_tests::http_client::http_method::GET);
+
+		client.send_https( settings );
+		io_context.run(); // ?
+	}
+}
+
+
+TEST_CASE("single_client_multiple_exist_files_with_fake_secret")
+{
+	check_pregenerated_files();
+
+	boost::asio::io_context io_context;
+
+	tt_tests::http_client client( io_context, { handle_response_body } );
+
+	tt_tests::utils::is_reseived = false;
+	tt_tests::utils::is_valid_file = false;
+	tt_tests::utils::expected_errc = error::http_errc::unautorized;
+	auto key_pos = std::begin(tt_tests::fake_auth_tokens);
+	for(std::uint32_t i = 0, targets_size = tt_tests::upload_target_filepaths.size(); 
+		i < tt_tests::fake_auth_tokens.size(); ++i)
+	{
+		auto settings = tt_tests::make_connect(
+			std::string{ tt_tests::server_host }, 
+			tt_tests::server_port, 
+			*key_pos, 
+			{ tt_tests::upload_target_filepaths[i % targets_size] }, 
+			11, 
+			tt_tests::http_client::http_method::GET);
+
+		client.send_https( settings );
+		io_context.run(); // ?
+	}
+}
+
+
+TEST_CASE("single_client_multiple_exist_files_with_secret")
+{
+	check_pregenerated_files();
+
+	boost::asio::io_context io_context;
+
+	tt_tests::http_client client( io_context, { handle_response_body } );
+
+	tt_tests::utils::is_reseived = false;
+	tt_tests::utils::is_valid_file = true;
+	tt_tests::utils::expected_errc = error::http_errc::successs;
+	auto key_pos = std::begin(tt_tests::auth_tokens);
+	for(std::uint32_t i = 0, targets_size = tt_tests::upload_target_filepaths.size(); 
+		i < tt_tests::auth_tokens.size(); ++i)
+	{
+		auto settings = tt_tests::make_connect(
+			std::string{ tt_tests::server_host }, 
+			tt_tests::server_port, 
+			*key_pos, 
+			{ tt_tests::upload_target_filepaths[i % targets_size] }, 
+			11, 
+			tt_tests::http_client::http_method::GET);
+
+		client.send_https( settings );
+		io_context.run(); // ?
+	}
+}
+
 
 #if 0
 TEST_CASE("clear_section")
