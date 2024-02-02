@@ -11,6 +11,8 @@ project(http_server
 # General options
 #-----------------------------------------------------------------------------------------------------------------------------------------
 
+option(TT_USE_PRESET_FILE_MIME "Enable use small optimization based on file extention" ON)
+
 if(NOT DEFINED CMAKE_BUILD_TYPE AND NOT DEFINED CMAKE_CONFIGURATION_TYPES)
 	set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
 	set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRING "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
@@ -19,25 +21,27 @@ endif()
 set(EXECUTABLE_TARGET_NAME ${PROJECT_NAME})
 add_executable(${EXECUTABLE_TARGET_NAME})
 
-set(DEFAULT_HOST_IP "127.0.0.1")
-set(DEFAULT_HOST_PORT 1234)
-set(DEFAULT_THREADS_NUMBER 4)
 
-set(HOST_IP "${DEFAULT_HOST_IP}")
-if(DEFINED TT_EXTERNAL_HOST_IP)
-	set(HOST_IP "${TT_EXTERNAL_HOST_IP}")
-endif()
+set(DEFAULT_THREADS_COUNT 4)
 
-set(HOST_PORT ${DEFAULT_HOST_PORT})
-if(DEFINED TT_HOST_PORT)
-	set(HOST_PORT ${TT_HOST_PORT})
-endif()
-
-set(THREADS_NUMBER ${DEFAULT_THREADS_COUNT})
+set(THREADS_COUNT ${DEFAULT_THREADS_COUNT})
 if(DEFINED TT_THREADS_NUMBER)
-	set(THREADS_NUMBER ${TT_THREADS_NUMBER})
+	set(THRETHREADS_COUNTADS_NUMBER ${TT_THREADS_COUNT})
 endif()
 
+if(TT_USE_PRESET_FILE_MIME)
+	message(STATUS "Use preset file mime based on file extension:\n"
+	".htm saved in text/html\n"
+	".html saved in text/html\n"
+	".json saved in application/json\n"
+	".jpe saved in image/jpeg, "
+	"etc")
+endif()
+
+message(STATUS "taget:${EXECUTABLE_TARGET_NAME} option TT_USE_PRESET_FILE_MIME=${TT_USE_PRESET_FILE_MIME}")
+message(STATUS "taget:${EXECUTABLE_TARGET_NAME} option HOST_IP=${HOST_IP}")
+message(STATUS "taget:${EXECUTABLE_TARGET_NAME} option PORT_IP=${PORT_IP}")
+message(STATUS "taget:${EXECUTABLE_TARGET_NAME} option THREADS_COUNT=${THREADS_COUNT}")
 
 # other options
 
@@ -59,6 +63,7 @@ set(${EXECUTABLE_TARGET_NAME}_source
 	${CMAKE_CURRENT_SOURCE_DIR}/listener.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/http_server.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/http_session.cpp
+	${CMAKE_CURRENT_SOURCE_DIR}/auth_gater.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/utils/files_prepare.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/utils/filesystem_helpers.cpp
 
@@ -79,8 +84,8 @@ target_sources(${EXECUTABLE_TARGET_NAME}
 target_compile_definitions(${EXECUTABLE_TARGET_NAME}
 	PRIVATE
 		HOST_IP="${HOST_IP}"
-		HOST_PORT=${HOST_PORT}
-		THREADS_NUMBER=${THREADS_NUMBER}
+		HOST_PORT=${PORT_IP}
+		THREADS_COUNT=${THREADS_COUNT}
 )
 
 set(COMPILE_OPTIONS)
